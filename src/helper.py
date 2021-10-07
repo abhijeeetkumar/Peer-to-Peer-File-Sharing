@@ -1,11 +1,3 @@
-# coding=utf-8
-"""
------------------------------------------------------------------------------------------------------------
-| This project is GPL v3 licensed. Refer to https://www.gnu.org/licenses/gpl-3.0.en.html for more details |
-| Author: Andrew Nagyeb                                                                                   |
-| Repository: https://github.com/andrewnagyeb                                                             |
------------------------------------------------------------------------------------------------------------
-"""
 import os
 
 
