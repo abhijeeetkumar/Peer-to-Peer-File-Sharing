@@ -17,7 +17,7 @@ class DataObject:
         #sock = self.sock  # create a socket
         self.sock.connect((self.host, self.port))  # connect to server
         self.sock.send(pickle.dumps(message))  # send some data
-        result = pickle.loads(self.sock.recv(50000))  # receive the response
+        result = pickle.loads(self.sock.recv(1024))  # receive the response
         self.sock.close()  # close the connection
         return result
     

@@ -18,8 +18,8 @@ def build_server(port):
 def search_and_download(ip,port):
       filename = input("Please enter filename you want to search for.\n")
       if len(filename) != 0:
-         peer = Peer(socket, 0, "", port, host)  # We don't have to set port or host for peer as it is not going to listen
-         file_data = peer.search(filename, valid_host, valid_port)
+         peer = Peer(socket, 0, "", port, ip)  # We don't have to set port or host for peer as it is not going to listen
+         file_data = peer.search(filename, ip, port)
          peer_host, peer_port, download_it = show_result(file_data, filename)
          if download_it:
             peer.download_file([DOWNLOAD, filename], peer_host, peer_port)
@@ -44,7 +44,7 @@ def register_node(ip,port):
         if len(shared_files) != 0:
            REGISTERED_SUCCESSFULLY = peer.data_object.register
            sharing_datetime = datetime.datetime.fromtimestamp(int(time.time())).strftime('%Y-%m-%d %H:%M:%S')
-           data_object = dict(peer_port=valid_port, peer_host=valid_host, shared_files=shared_files,shared_at=sharing_datetime)
+           data_object = dict(peer_port=server_port, peer_host=client_host, shared_files=shared_files,shared_at=sharing_datetime)
            if REGISTERED_SUCCESSFULLY:
                 DATA_INSERTED = peer.data_object.append_data(data_object)
                 if DATA_INSERTED:
