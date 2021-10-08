@@ -3,6 +3,8 @@ import socket as socket
 import argparse
 import datetime
 import time
+import threading
+
 from os import *
 from server import *
 from peer import *
@@ -53,7 +55,8 @@ def register_node(ip,port):
                    print ("Congratulations you have been registered successfully.\n" \
                           "[*] You will now be put to the listening state.\n" \
                           "[*] Started listening on", client_ip, ":", server_port)
-                   peer.listen(PATH)  # block until you receive request
+                   i_thread = threading.Thread(target=peer.listen, args=(PATH,))
+                   i_thread.start() #tpeer.listen(PATH)  # block until you receive request
                 else:
                     print ("There was an error while inserting your data.")
         else:
@@ -61,18 +64,17 @@ def register_node(ip,port):
     except Exception as exc:
         print("Caught exception: %s" %str(exc))
 
-def build_client(ip, port):
+def build_client(server_ip, server_port):
     print ("Welcome Client!!!")
-    server_ip = ip
-    server_port = port
-    choice = input("Enter 1 for searching a file and downloading it"
-               "from the network.\n"
-               "Enter 2 for resgistering the client with the"
-               "central server\n")
-    if choice == "1":
-       search_and_download(server_ip,server_port)
-    else :
-       register_node(server_ip,server_port)
+    while True: 
+         choice = input("Enter 1 for searching a file and downloading it"
+                  "from the network.\n"
+                  "Enter 2 for resgistering the client with the"
+                  "central server\n")
+         if choice == "1":
+            search_and_download(server_ip,server_port)
+         else :
+            register_node(server_ip,server_port)
 
 def main():
     #parse args

@@ -30,8 +30,8 @@ def show_result(result, filename, _=None):
 
             else:
                 # Dictionary contains only one element. So we retrieve its host and port
-                peer_host = result[1].values()[0]['peer_host']
-                peer_port = result[1].values()[0]['peer_port']
+                peer_host = list(result[1].values())[0]['peer_host']
+                peer_port = list(result[1].values())[0]['peer_port']
                 return peer_host, peer_port, True
         elif download_it == 'n':
             return _, _, False  # When user refuses to download it return any,any,false
