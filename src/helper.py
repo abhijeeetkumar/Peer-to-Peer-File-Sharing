@@ -1,5 +1,5 @@
 import os
-
+from constants import *
 
 def show_result(result, filename, _=None):
     # type: (list, str) -> [any,any,bool]
@@ -41,6 +41,25 @@ def show_result(result, filename, _=None):
     else:
         print ("File", filename, "was not found!")
 
+def get_chunk_path(tmp_dir, filename, chunkid):
+    parent = os.path.join(tmp_dir, filename)
+    if not os.path.exists(parent):
+       os.system('mkdir -p {}'.format(parent))
+    return os.path.join(parent, str(chunkid) + '.chunk')
+
+def split_file_into_chunks(tmp_dir, filepath):
+    filename = filepath.split('/')[-1]
+    with open(filepath, 'rb') as f:
+         for chunkid, chunk in enumerate(iter(lambda: f.read(BYTES_PER_CHUNK), b'')):
+             local_chunk_path = get_chunk_path(tmp_dir, filename, chunkid)
+             with open(local_chunk_path, 'wb') as g:
+                  g.write(chunk)
+
+def combine_chunks_to_file(tmp_dir, destination, filename, chunkids):
+    with open(destination, 'wb') as f:
+         for chunkid in chunkids:
+             with open(get_chunk_path(tmp_dir, filename, chunkid), 'rb') as g:
+                  f.write(g.read())
 
 def send_file(conn, data, PATH):
     file_path = PATH

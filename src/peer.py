@@ -11,6 +11,9 @@ class Peer:
         self.sock.bind((self.host, self.port))  # bind socket to an address
         self.sock.listen(2)  # max num connections
         self.data_object = DataObject(s, server_host, server_port)
+        self.tmp_dir = os.path.join(os.path.join(os.getcwd(), 'temp'), socket.gethostname())
+        if not os.path.exists(self.tmp_dir):
+           os.makedirs(self.tmp_dir)
 
     @staticmethod
     def __recvall(sock):
@@ -21,6 +24,10 @@ class Peer:
               if len(part) < BUFF_SIZE:
                  break
         return data
+
+    def preprocess_reg_file(self, file_dir):
+         for f in os.listdir(file_dir):
+             split_file_into_chunks(self.tmp_dir, os.path.join(file_dir, f))
 
     def search(self, filename, host, port):
         result = self.send_receive([SEARCH, filename], host, port)
