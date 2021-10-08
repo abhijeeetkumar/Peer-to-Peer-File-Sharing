@@ -20,7 +20,7 @@ class Peer:
         s = socket.socket()
         s.connect((host, port))  # connect to server
         s.send(pickle.dumps(message))  # send some data
-        downloads_dir_path = os.path.join(os.path.join(os.getcwd(), 'peer'), 'downloads')  # If you want to change it. Change the folder actual name
+        downloads_dir_path = os.path.join(os.path.join(os.getcwd(), 'downloads'), socket.gethostname())  # If you want to change it. Change the folder actual name
         filename = message[1]  # requested filename from the server
         if not os.path.exists(downloads_dir_path):
             os.makedirs(downloads_dir_path)
