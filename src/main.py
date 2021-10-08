@@ -64,17 +64,33 @@ def register_node(ip,port):
     except Exception as exc:
         print("Caught exception: %s" %str(exc))
 
+def add_new_shared_files(server_ip, server_port):
+    print("not yet implemented")
+    pass
+
+def unshare_files(server_ip, server_port):
+    print("not yet implemented")
+    pass
+
 def build_client(server_ip, server_port):
     print ("Welcome Client!!!")
     while True: 
          choice = input("Enter 1 for searching a file and downloading it"
                   "from the network.\n"
                   "Enter 2 for resgistering the client with the"
-                  "central server\n")
+                  "central server\n"
+                  "Enter 3 for adding new folders in shared list.\n"
+                  "Enter 4 for unsharing folders\n")
          if choice == "1":
             search_and_download(server_ip,server_port)
-         else :
+         elif choice == "2":
             register_node(server_ip,server_port)
+         elif choice == "3":
+            add_new_shared_files(server_ip, server_port)
+         elif choice == "4":
+            unshare_files(server_ip, server_port)
+         else:
+            pass 
 
 def main():
     #parse args
