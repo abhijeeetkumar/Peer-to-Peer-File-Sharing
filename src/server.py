@@ -13,11 +13,21 @@ class Server:
         self.setOfLists = {}  # init: no lists to manage
         print ("[*] Started listening on", self.host, ":", self.port)
 
+    def __recvall(self, sock):
+        data = b''
+        while True:
+              part = sock.recv(BUFF_SIZE)
+              data += part
+              if len(part) < BUFF_SIZE:
+                 break
+        return data
+
+
     def run(self):
         while True:
             (conn, addr) = self.sock.accept()  # accept incoming call
             print ("[*] Got a connection from ", addr[0], ":", addr[1])
-            data = conn.recv(1024)  # fetch data from peer
+            data = self.__recvall(conn)  # fetch data from peer
             request = pickle.loads(data)  # unwrap the request
             print ("[*] Request after unwrap", request)
             if request[0] == REGISTER:  # create a list

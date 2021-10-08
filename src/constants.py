@@ -8,3 +8,4 @@ SEARCH = '7'
 DOWNLOAD = '8'
 HOST = 'localhost'
 PORT = 50014
+BUFF_SIZE = 4096
