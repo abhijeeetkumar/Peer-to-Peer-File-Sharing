@@ -11,13 +11,22 @@ class DataObject:
         self.list_id = list_id  # the list for which this stub is meant  #-
         self.sock = s.socket()
     # -
-    
+
+    def __recvall(self, sock):
+        data = b''
+        while True:
+              part = sock.recv(BUFF_SIZE)
+              data += part
+              if len(part) < BUFF_SIZE:
+                 break
+        return data
+
     def send_receive(self, message):
         # type: (list) -> str or int
         sock = socket.socket()  # create a socket
         sock.connect((self.host, self.port))  # connect to server
         sock.send(pickle.dumps(message))  # send some data
-        result = pickle.loads(sock.recv(1024))  # receive the response
+        result = pickle.loads(self.__recvall(sock))  # receive the response
         self.sock.close()  # close the connection
         return result
     

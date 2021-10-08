@@ -12,6 +12,16 @@ class Peer:
         self.sock.listen(2)  # max num connections
         self.data_object = DataObject(s, server_host, server_port)
 
+    @staticmethod
+    def __recvall(sock):
+        data = b''
+        while True:
+              part = sock.recv(BUFF_SIZE)
+              data += part
+              if len(part) < BUFF_SIZE:
+                 break
+        return data
+
     def search(self, filename, host, port):
         result = self.send_receive([SEARCH, filename], host, port)
         return result
@@ -27,7 +37,7 @@ class Peer:
         with open(os.path.join(downloads_dir_path, "downloaded_" + filename),
                   'wb') as file_to_write:
             while True:
-                data = s.recv(1024)
+                data = self.__recvall(s)
                 if not data:
                     break
                 file_to_write.write(data)
@@ -42,7 +52,7 @@ class Peer:
         sock = socket.socket()  # create a socket
         sock.connect((host, port))  # connect to server
         sock.send(pickle.dumps(message))  # send some data
-        result = pickle.loads(sock.recv(1048))  # receive the response
+        result = pickle.loads(Peer.__recvall(sock))  # receive the response
         sock.close()  # close the connection
         return result
 
@@ -61,7 +71,7 @@ class Peer:
         while True:
             (conn, addr) = self.sock.accept()
             print ("[*] Got a connection from ", addr[0], ":", addr[1])
-            data = conn.recv(1024)
+            data = self.__recvall(conn)
             request = pickle.loads(data)  # unwrap the request
             if request[0] == DOWNLOAD:
                 send_file(conn, request, PATH)
