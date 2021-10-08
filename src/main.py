@@ -1,6 +1,8 @@
 import pdb
 import socket as socket
 import argparse
+import datetime
+import time
 from os import *
 from server import *
 from peer import *
@@ -40,24 +42,24 @@ def register_node(ip,port):
     PATH = input("Please enter the directory path of which you want to share its files.\n")
     
     try:
-        shared_files = [f for f in listdir(PATH) if path.isfile(path.join(PATH, f))]
+        shared_files = [f for f in listdir(PATH) if os.path.isfile(path.join(PATH, f))]
         if len(shared_files) != 0:
            REGISTERED_SUCCESSFULLY = peer.data_object.register
            sharing_datetime = datetime.datetime.fromtimestamp(int(time.time())).strftime('%Y-%m-%d %H:%M:%S')
-           data_object = dict(peer_port=server_port, peer_host=client_host, shared_files=shared_files,shared_at=sharing_datetime)
+           data_object = dict(peer_port=server_port, peer_host=client_ip, shared_files=shared_files,shared_at=sharing_datetime)
            if REGISTERED_SUCCESSFULLY:
                 DATA_INSERTED = peer.data_object.append_data(data_object)
                 if DATA_INSERTED:
                    print ("Congratulations you have been registered successfully.\n" \
                           "[*] You will now be put to the listening state.\n" \
-                          "[*] Started listening on", valid_host, ":", valid_port)
+                          "[*] Started listening on", client_ip, ":", server_port)
                    peer.listen(PATH)  # block until you receive request
                 else:
                     print ("There was an error while inserting your data.")
         else:
            print ("You cannot share empty directory.")
-    except OSError:
-        print("No such directory found")
+    except Exception as exc:
+        print("Caught exception: %s" %str(exc))
 
 def build_client(ip, port):
     print ("Welcome Client!!!")

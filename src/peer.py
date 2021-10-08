@@ -17,13 +17,14 @@ class Peer:
         return result
 
     def download_file(self, message, host, port):
-        s = socket()
+        s = socket.socket()
         s.connect((host, port))  # connect to server
         s.send(pickle.dumps(message))  # send some data
-        downloads_dir_path = os.path.join(os.getcwd(),
-                                          'peer')  # If you want to change it. Change the folder actual name
+        downloads_dir_path = os.path.join(os.path.join(os.getcwd(), 'peer'), 'downloads')  # If you want to change it. Change the folder actual name
         filename = message[1]  # requested filename from the server
-        with open(os.path.join(os.path.join(downloads_dir_path, 'downloads'), "downloaded_" + filename),
+        if not os.path.exists(downloads_dir_path):
+            os.makedirs(downloads_dir_path)
+        with open(os.path.join(downloads_dir_path, "downloaded_" + filename),
                   'wb') as file_to_write:
             while True:
                 data = s.recv(1024)
@@ -38,7 +39,7 @@ class Peer:
     @staticmethod
     def send_receive(message, host, port):
         # type: (list) -> str or int
-        sock = socket()  # create a socket
+        sock = socket.socket()  # create a socket
         sock.connect((host, port))  # connect to server
         sock.send(pickle.dumps(message))  # send some data
         result = pickle.loads(sock.recv(1048))  # receive the response
@@ -51,7 +52,7 @@ class Peer:
         """
         :rtype: None
         """
-        sock = socket()
+        sock = socket.socket()
         sock.connect((host, port))  # connect to server (blocking call)
         sock.send(pickle.dumps(data))  # send some data
         sock.close()

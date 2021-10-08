@@ -13,7 +13,7 @@ def show_result(result, filename, _=None):
             print ("File shared at:", value['shared_at'], "\n")
             print ("-------------------------------------")
         download_it = input("Do you want to download it (Y/N):\n")
-        (download_it.strip()).lower()
+        download_it = (download_it.strip()).lower()
         if download_it == "y":
             if len(result[1]) > 1:  # Making sure there are more than one registered peer has the file.
                 peer_id = input("Please specify Peer ID\n")
