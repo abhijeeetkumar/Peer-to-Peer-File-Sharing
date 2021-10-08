@@ -2,6 +2,7 @@ from threading import *
 import pickle
 from constants import *
 from controller import *
+
 class Server:
     def __init__(self, s, port=0, host=0, max_num_connections=5):
         self.host = host  # this machine
