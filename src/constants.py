@@ -6,6 +6,7 @@ REGISTER = '5'
 STOP = '6'
 SEARCH = '7'
 DOWNLOAD = '8'
+ENUMERATE = '9'
 HOST = 'localhost'
 PORT = 50014
 BUFF_SIZE = 4096
