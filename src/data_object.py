@@ -47,3 +47,6 @@ class DataObject:
         assert self.list_id is not None  # -
         result  = self.send_receive([APPEND, peer_data_object, self.list_id])
         return result
+
+    def get_file_list(self):
+        print(self.send_receive([ENUMERATE]))
