@@ -10,6 +10,7 @@ def show_result(result, filename, _=None):
             print ("Peer ID:", key, "\n")
             print ("Peer port:", value['peer_port'], "\n")
             print ("Peer host:", value['peer_host'], "\n")
+            print_chunks(value['shared_chunks'], filename)
             print ("File shared at:", value['shared_at'], "\n")
             print ("-------------------------------------")
         download_it = input("Do you want to download it (Y/N):\n")
@@ -40,6 +41,10 @@ def show_result(result, filename, _=None):
             return _, _, False
     else:
         print ("File", filename, "was not found!")
+
+def print_chunks(shared_chunks, filename):
+    chunk_filename = [value.split('/')[-1] for value in shared_chunks.get(filename)]
+    print("Chunks available: ",chunk_filename, "\n")
 
 def get_chunk_path(tmp_dir, filename, chunkid):
     parent = os.path.join(tmp_dir, filename)
