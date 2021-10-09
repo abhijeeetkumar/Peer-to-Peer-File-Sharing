@@ -49,11 +49,14 @@ def get_chunk_path(tmp_dir, filename, chunkid):
 
 def split_file_into_chunks(tmp_dir, filepath):
     filename = filepath.split('/')[-1]
+    listOfChunks = []
     with open(filepath, 'rb') as f:
          for chunkid, chunk in enumerate(iter(lambda: f.read(BYTES_PER_CHUNK), b'')):
              local_chunk_path = get_chunk_path(tmp_dir, filename, chunkid)
+             listOfChunks.append(local_chunk_path)
              with open(local_chunk_path, 'wb') as g:
                   g.write(chunk)
+    return listOfChunks 
 
 def combine_chunks_to_file(tmp_dir, destination, filename, chunkids):
     with open(destination, 'wb') as f:
