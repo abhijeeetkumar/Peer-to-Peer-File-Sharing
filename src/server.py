@@ -51,13 +51,13 @@ class Server:
                 conn.close()  # close the connection  #-
                 break  # -
             elif request[0] == SEARCH:
-                #self.semaphore.acquire() - i dont need for search
+                self.semaphore.acquire()
                 found_boolean, file_object = search(request[1], self.setOfLists)
                 if found_boolean:
                     conn.send(pickle.dumps([found_boolean, file_object]))
                 else:
                     conn.send(pickle.dumps([found_boolean]))
-                #self.semaphore.release()
+                self.semaphore.release()
             elif request[0] == ENUMERATE:
                result_file_list = file_list(self.setOfLists)
                conn.send(pickle.dumps(result_file_list))

@@ -47,10 +47,10 @@ def register_node(ip,port):
         shared_files = [f for f in listdir(PATH) if os.path.isfile(path.join(PATH, f))]
         shared_files_size = [os.path.getsize(path.join(PATH,f)) for f in listdir(PATH) if os.path.isfile(path.join(PATH, f))]
         if len(shared_files) != 0:
-           peer.preprocess_reg_file(PATH) #divide into chunks
+           shared_chunks = peer.preprocess_reg_file(PATH) #divide into chunks
            REGISTERED_SUCCESSFULLY = peer.data_object.register
            sharing_datetime = datetime.datetime.fromtimestamp(int(time.time())).strftime('%Y-%m-%d %H:%M:%S')
-           data_object = dict(peer_port=server_port, peer_host=client_ip, shared_files=shared_files, shared_files_size=shared_files_size,shared_at=sharing_datetime)
+           data_object = dict(peer_port=server_port, peer_host=client_ip, shared_files=shared_files, shared_files_size=shared_files_size, shared_at=sharing_datetime, shared_chunks=shared_chunks)
            if REGISTERED_SUCCESSFULLY:
                 DATA_INSERTED = peer.data_object.append_data(data_object)
                 if DATA_INSERTED:

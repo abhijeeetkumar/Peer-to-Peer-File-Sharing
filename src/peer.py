@@ -17,17 +17,20 @@ class Peer:
 
     @staticmethod
     def __recvall(sock):
-        data = b''
+        data = []
         while True:
               part = sock.recv(BUFF_SIZE)
-              data += part
+              data.append(part)
               if len(part) < BUFF_SIZE:
                  break
-        return data
+        return b"".join(data)
 
     def preprocess_reg_file(self, file_dir):
+         return_data = {}
          for f in os.listdir(file_dir):
-             split_file_into_chunks(self.tmp_dir, os.path.join(file_dir, f))
+             return_data.update({f:split_file_into_chunks(self.tmp_dir, os.path.join(file_dir, f))})
+
+         return return_data
 
     def search(self, filename, host, port):
         result = self.send_receive([SEARCH, filename], host, port)
@@ -59,7 +62,7 @@ class Peer:
         sock = socket.socket()  # create a socket
         sock.connect((host, port))  # connect to server
         sock.send(pickle.dumps(message))  # send some data
-        result = pickle.loads(Peer.__recvall(sock))  # receive the response
+        result = pickle.loads(Peer.__recvall(sock))  # receive the response - TODO: pickle.loads() can only work for 4096B object
         sock.close()  # close the connection
         return result
 
