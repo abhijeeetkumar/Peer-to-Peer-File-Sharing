@@ -2,6 +2,8 @@ from data_object import *
 from helper import *
 
 import math
+import threading
+from queue import PriorityQueue 
 
 class Peer:
     def __init__(self, s, port, host, server_port, server_host):
@@ -37,10 +39,27 @@ class Peer:
         result = self.send_receive([SEARCH, filename], host, port)
         return result
 
-    def download_file(self, message, file_size, host, port):
+    @staticmethod 
+    def download_chunk_thread(host, port, message, dir_path, chunk_ids):
         s = socket.socket()
-        s.connect((host, port))  # connect to server
-        s.send(pickle.dumps(message))  # send some data
+        s.connect((host,int(port)))
+
+        #since message is mutuable (pass by reference in C), so all thread will see changes 
+        #thus creating a new one
+        new_message = [message[0], message[1]]
+        new_message.append(chunk_ids)
+        #print(new_message)
+        s.send(pickle.dumps(new_message))  # send some data 
+
+        with open(os.path.join(dir_path, chunk_ids), 'wb') as file_to_write:
+             data = s.recv(BYTES_PER_CHUNK)
+             file_to_write.write(data)
+        file_to_write.close()
+
+        print("downloaded", chunk_ids, "from", host,":", port)
+        s.close()
+
+    def download_file(self, message, chunkid_to_addresses):
         downloads_dir_path = os.path.join(os.path.join(os.getcwd(), 'downloads'), socket.gethostname())  
         filename = message[1]  # requested filename from the server
         if not os.path.exists(downloads_dir_path):
@@ -48,16 +67,41 @@ class Peer:
 
         downloaded_filename = os.path.join(downloads_dir_path, "downloaded_" + filename)
 
-        chunkids = range(math.ceil(file_size/BYTES_PER_CHUNK))
-        for chunkid in chunkids:
-           with open(get_chunk_path(self.tmp_dir, filename, chunkid), 'wb') as file_to_write:
-               data = s.recv(BYTES_PER_CHUNK)
-               file_to_write.write(data)
-           file_to_write.close()
+        chunkids = list(chunkid_to_addresses.keys())
+        #print(chunkids)
+
+        #host, port = list(chunkid_to_addresses.values())[0][0].split(":")
+        #self.download_chunk_thread(host,port,message,os.path.join(self.tmp_dir, filename), chunkids)
+
+        download_queue = PriorityQueue() #rarest_first by len(value())
+        counter = 0
+        for key, value in chunkid_to_addresses.items(): 
+           download_queue.put((len(value), counter, {
+                'addresses': value,
+                'filename' : filename,
+                'chunkid'  : key
+           }))
+           counter += 1
+
+        threads = []
+        while not download_queue.empty():
+           entry = download_queue.get() 
+           host, port = list(entry[2]['addresses'])[0].split(":")
+           filename = entry[2]['filename']
+           chunkid = entry[2]['chunkid'] 
+           dir_path = os.path.join(self.tmp_dir, filename)
+           if not os.path.exists(dir_path):
+              os.makedirs(dir_path)
+           args = (host,port,message, dir_path, chunkid)
+           t = threading.Thread(target=self.download_chunk_thread, args = args)
+           t.start()
+           threads.append(t)
+
+        for t in threads:
+           t.join()
 
         combine_chunks_to_file(self.tmp_dir, downloaded_filename, filename, chunkids)
 
-        s.close()
         print('Successfully get the file')
         print('connection closed')
 
