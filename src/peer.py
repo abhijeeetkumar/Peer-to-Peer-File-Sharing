@@ -14,7 +14,7 @@ class Peer:
         self.port = port  # port it will listen to
         self.sock = s.socket()  # socket for incoming calls
         self.sock.bind((self.host, self.port))  # bind socket to an address
-        self.sock.listen(2)  # max num connections
+        self.sock.listen(5)  # max num connections
         self.data_object = DataObject(s, server_host, server_port)
         self.tmp_dir = os.path.join(os.path.join(os.getcwd(), 'temp'), socket.gethostname())
         self.is_listening  = False 
@@ -70,8 +70,10 @@ class Peer:
         chunk_path = []
         chunk_path.append(str(os.path.join(dir_path,chunk_ids)))
         shared_chunks = {filename:chunk_path}
+        shared_files_size = [os.path.getsize(f) for f in chunk_path]
         sharing_datetime = datetime.datetime.fromtimestamp(int(time.time())).strftime('%Y-%m-%d %H:%M:%S')
-        peer_data_object = dict(peer_port=self.port, peer_host=self.host, shared_at=sharing_datetime, shared_files=filename, shared_chunks=shared_chunks)
+        peer_data_object = dict(peer_port=self.port, peer_host=self.host, shared_at=sharing_datetime, shared_files=filename,
+                                shared_files_size=shared_files_size, shared_chunks=shared_chunks)
         IS_SUCCESS =self.data_object.register_chunk(peer_data_object)
         if IS_SUCCESS:
            print("Registered as source for chunk id:", chunk_ids)
