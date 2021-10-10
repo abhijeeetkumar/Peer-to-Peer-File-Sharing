@@ -1,6 +1,7 @@
 from data_object import *
 from helper import *
 
+import math
 
 class Peer:
     def __init__(self, s, port, host, server_port, server_host):
@@ -36,22 +37,29 @@ class Peer:
         result = self.send_receive([SEARCH, filename], host, port)
         return result
 
-    def download_file(self, message, host, port):
+    def download_file(self, message, file_size, host, port):
         s = socket.socket()
         s.connect((host, port))  # connect to server
         s.send(pickle.dumps(message))  # send some data
-        downloads_dir_path = os.path.join(os.path.join(os.getcwd(), 'downloads'), socket.gethostname())  # If you want to change it. Change the folder actual name
+        downloads_dir_path = os.path.join(os.path.join(os.getcwd(), 'downloads'), socket.gethostname())  
         filename = message[1]  # requested filename from the server
         if not os.path.exists(downloads_dir_path):
             os.makedirs(downloads_dir_path)
-        with open(os.path.join(downloads_dir_path, "downloaded_" + filename),
-                  'wb') as file_to_write:
-            while True:
-                data = self.__recvall(s)
-                if not data:
-                    break
-                file_to_write.write(data)
-            file_to_write.close()
+
+        downloaded_filename = os.path.join(downloads_dir_path, "downloaded_" + filename)
+
+        chunkids = range(math.ceil(file_size/BYTES_PER_CHUNK))
+        for chunkid in chunkids:
+           with open(get_chunk_path(self.tmp_dir, filename, chunkid), 'wb') as file_to_write:
+               while True:
+                    data = self.__recvall(s)
+                    if not data:
+                       break
+                    file_to_write.write(data)
+               file_to_write.close()
+
+        combine_chunks_to_file(self.tmp_dir, downloaded_filename, filename, chunkids)
+
         s.close()
         print('Successfully get the file')
         print('connection closed')
@@ -84,4 +92,4 @@ class Peer:
             data = self.__recvall(conn)
             request = pickle.loads(data)  # unwrap the request
             if request[0] == DOWNLOAD:
-                send_file(conn, request, PATH)
+                send_file(conn, request, self.tmp_dir)
