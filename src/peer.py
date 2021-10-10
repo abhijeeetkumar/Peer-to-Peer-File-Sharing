@@ -17,6 +17,7 @@ class Peer:
         self.sock.listen(2)  # max num connections
         self.data_object = DataObject(s, server_host, server_port)
         self.tmp_dir = os.path.join(os.path.join(os.getcwd(), 'temp'), socket.gethostname())
+        self.is_listening  = False 
         if not os.path.exists(self.tmp_dir):
            os.makedirs(self.tmp_dir)
 
@@ -67,6 +68,8 @@ class Peer:
         IS_SUCCESS =self.data_object.register_chunk(peer_data_object)
         if IS_SUCCESS:
            print("Registered as source for chunk id:", chunk_ids)
+           i_thread = threading.Thread(target=self.listen, args=(dir_path,))
+           i_thread.start()
         s.close()
 
     def download_file(self, message, chunkid_to_addresses):
@@ -95,10 +98,24 @@ class Peer:
 
         threads = []
         while not download_queue.empty():
-           entry = download_queue.get() 
-           host, port = list(entry[2]['addresses'])[0].split(":")
+           entry = download_queue.get()
+
+           #print(list(entry[2]['addresses']))
+           for alive_peer in list(entry[2]['addresses']): #fault tolerance: if node exits, download from other peer
+               try:
+                 sock = socket.socket()
+                 host, port = alive_peer.split(":")
+                 sock.connect((host, int(port)))
+                 sock.send(pickle.dumps([PING]))
+                 sock.close()
+                 break
+               except Exception as e:
+                 print(alive_peer, "is dead! Trying another peer %s" %str(e))
+           host, port = alive_peer.split(":")
+
            filename = entry[2]['filename']
            chunkid = entry[2]['chunkid'] 
+
            dir_path = os.path.join(self.tmp_dir, filename)
            if not os.path.exists(dir_path):
               os.makedirs(dir_path)
@@ -110,6 +127,7 @@ class Peer:
                  break
            if ignore_flag == True:
               continue  
+
            args = (host, port, message, dir_path, chunkid)
            t = threading.Thread(target=self.download_chunk_thread, args = args)
            t.start()
@@ -145,6 +163,10 @@ class Peer:
         sock.close()
 
     def listen(self, PATH):
+        if self.is_listening == True:
+           pass
+
+        self.is_listening = True 
         while True:
             (conn, addr) = self.sock.accept()
             print ("[*] Got a connection from ", addr[0], ":", addr[1])
@@ -152,3 +174,5 @@ class Peer:
             request = pickle.loads(data)  # unwrap the request
             if request[0] == DOWNLOAD:
                 send_file(conn, request, self.tmp_dir)
+            if request[0] == PING:
+                pass
