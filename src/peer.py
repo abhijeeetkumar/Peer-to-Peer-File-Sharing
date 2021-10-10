@@ -18,13 +18,13 @@ class Peer:
 
     @staticmethod
     def __recvall(sock):
-        data = []
+        data = b''
         while True:
               part = sock.recv(BUFF_SIZE)
-              data.append(part)
+              data += part
               if len(part) < BUFF_SIZE:
                  break
-        return b"".join(data)
+        return data
 
     def preprocess_reg_file(self, file_dir):
          return_data = {}
@@ -51,12 +51,9 @@ class Peer:
         chunkids = range(math.ceil(file_size/BYTES_PER_CHUNK))
         for chunkid in chunkids:
            with open(get_chunk_path(self.tmp_dir, filename, chunkid), 'wb') as file_to_write:
-               while True:
-                    data = self.__recvall(s)
-                    if not data:
-                       break
-                    file_to_write.write(data)
-               file_to_write.close()
+               data = s.recv(BYTES_PER_CHUNK)
+               file_to_write.write(data)
+           file_to_write.close()
 
         combine_chunks_to_file(self.tmp_dir, downloaded_filename, filename, chunkids)
 
