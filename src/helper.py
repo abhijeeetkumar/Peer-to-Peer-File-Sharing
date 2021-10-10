@@ -23,24 +23,35 @@ def show_result(result, filename, _=None):
                     if peer_id in result[1]:
                         peer_host = result[1].get(peer_id)['peer_host']
                         peer_port = result[1].get(peer_id)['peer_port']
-                        return peer_host, peer_port, True
+                        file_id = get_file_id(result[1].get(peer_id)['shared_files'], filename)
+                        download_size = result[1].get(peer_id)['shared_files_size'][file_id]
+                        return peer_host, peer_port, download_size, True
                     else:
-                        return _, _, False
+                        return _, _, _, False
                 except ValueError:
-                    return _, _, False
+                    return _, _, _, False
 
             else:
                 # Dictionary contains only one element. So we retrieve its host and port
                 peer_host = list(result[1].values())[0]['peer_host']
                 peer_port = list(result[1].values())[0]['peer_port']
-                return peer_host, peer_port, True
+                file_id = get_file_id(list(result[1].values())[0]['shared_files'], filename)
+                download_size = list(result[1].values())[0]['shared_files_size'][file_id]
+                return peer_host, peer_port, download_size, True
         elif download_it == 'n':
-            return _, _, False  # When user refuses to download it return any,any,false
+            return _, _, _, False  # When user refuses to download it return any,any,false
         else:
             print ("Invalid Choice")
-            return _, _, False
+            return _, _, _, False
     else:
         print ("File", filename, "was not found!")
+
+def get_file_id(file_list, filename):
+    for file_id, file_name in enumerate(file_list):
+       if filename == file_name:
+          break
+
+    return file_id
 
 def print_chunks(shared_chunks, filename):
     chunk_filename = [value.split('/')[-1] for value in shared_chunks.get(filename)]
@@ -69,12 +80,15 @@ def combine_chunks_to_file(tmp_dir, destination, filename, chunkids):
              with open(get_chunk_path(tmp_dir, filename, chunkid), 'rb') as g:
                   f.write(g.read())
 
-def send_file(conn, data, PATH):
-    file_path = PATH
+def send_file(conn, data, tmp_dir):
     filename = data[1]
-    path_to_file = os.path.join(file_path, filename)
-    with open(path_to_file, 'rb') as file_to_send:
-        for data in file_to_send:
-            conn.sendall(data)
+    filepath = os.path.join(tmp_dir, filename)
+
+    for f in sorted(os.listdir(filepath)):
+       path_to_file = os.path.join(filepath, f)
+       with open(path_to_file, 'rb') as file_to_send:
+          for data in file_to_send:
+             conn.sendall(data)
+
     print('Done sending')
     conn.close()
