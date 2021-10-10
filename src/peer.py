@@ -18,6 +18,11 @@ class Peer:
         self.data_object = DataObject(s, server_host, server_port)
         self.tmp_dir = os.path.join(os.path.join(os.getcwd(), 'temp'), socket.gethostname())
         self.is_listening  = False 
+        self.am_choking = defaultdict(lambda:True)  #Choking - Unchoking
+        self.am_interested = defaultdict(lambda:False)
+        self.peer_choking = defaultdict(lambda:True)
+        self.peer_interested = defaultdict(lambda:False)
+
         if not os.path.exists(self.tmp_dir):
            os.makedirs(self.tmp_dir)
 
@@ -122,6 +127,11 @@ class Peer:
                  print(alive_peer, "is dead! Trying another peer %s" %str(e))
            host, port = alive_peer.split(":")
 
+           self.am_interested[host] = True
+           self.am_choking[host] = False
+           #Peer.send_to(host, int(port)-2, [UNCHOKE])
+           #print("unchoking ", host)
+
            filename = entry[2]['filename']
            chunkid = entry[2]['chunkid'] 
 
@@ -139,8 +149,12 @@ class Peer:
 
            args = (host, port, message, dir_path, chunkid)
            t = threading.Thread(target=self.download_chunk_thread, args = args)
+
+           #while not (self.am_interested[host] == True and self.peer_choking[host] == False):
+           #   time.sleep(5) 
            t.start()
            threads.append(t)
+           self.am_interested[host] = False 
 
         for t in threads:
            t.join()
@@ -182,6 +196,19 @@ class Peer:
             data = self.__recvall(conn)
             request = pickle.loads(data)  # unwrap the request
             if request[0] == DOWNLOAD:
+                #while not (self.peer_interested[addr[0]] == True and self.am_choking[addr[0]] == False):
+                #     time.sleep(5)
                 send_file(conn, request, self.tmp_dir)
+                self.peer_interested[addr[0]] = False 
             if request[0] == PING:
-                pass
+                self.peer_interested[addr[0]] = True
+                #print("interested by", addr[0])
+                self.am_choking[addr[0]] = False #should unchoke only after recieveing chunk
+                #Peer.send_to(addr[0], addr[1]-2, [UNCHOKE])
+                #print("unchoking ", addr[0])
+            if request[0] == CHOKE:
+               self.peer_choking[addr[0]] = True
+               print("choked by", addr[0])
+            if request[0] == UNCHOKE:
+               self.peer_choking[addr[0]] = False
+               print("unchoked by", addr[0]) 
