@@ -19,10 +19,10 @@ def build_server(port):
     server.run()
 
 
-def search_and_download(ip,port):
+def search_and_download(peer, ip,port):
       filename = input("Please enter filename you want to search for.\n")
       if len(filename) != 0:
-         peer = Peer(socket, 0, "", port, ip)  # We don't have to set port or host for peer as it is not going to listen
+         #peer = Peer(socket, 0, "", port, ip)  # We don't have to set port or host for peer as it is not going to listen
          file_data = peer.search(filename, ip, port)
          chunkid_to_addresses, download_it = show_result(file_data, filename)
          if download_it:
@@ -32,7 +32,7 @@ def search_and_download(ip,port):
       else:
          print ("You cannot search for an empty string.")
 
-def register_node(ip,port):
+def register_node(peer, ip,port):
     print("Welcom Client for registration!!!")
     server_ip = ip
     server_port = port
@@ -40,7 +40,7 @@ def register_node(ip,port):
     client_ip = socket.gethostbyname(hostname)
     #client_ip =    input("Enter your IP address in the following format XXX.XXX.XXX.XXX\n")
     #client_port = input("Enter your port number\n")
-    peer = Peer(socket, server_port, client_ip, server_port, server_ip)
+    #peer = Peer(socket, server_port, client_ip, server_port, server_ip)
     PATH = input("Please enter the directory path of which you want to share its files.\n")
     
     try:
@@ -80,6 +80,8 @@ def list_all_files(server_ip, server_port):
 
 def build_client(server_ip, server_port):
     print ("Welcome Client!!!")
+    client_ip = socket.gethostbyname(socket.gethostname())
+    peer = Peer(socket, server_port, client_ip, server_port, server_ip)
     while True: 
          choice = input("Enter 1 for registering the client with the"
                   "central server\n"
@@ -89,9 +91,9 @@ def build_client(server_ip, server_port):
                   "Enter 4 for unsharing folders\n"
                   "Enter 5 to list all shared files in network\n")
          if choice == "1":
-            register_node(server_ip,server_port)
+            register_node(peer, server_ip,server_port)
          elif choice == "2":
-            search_and_download(server_ip,server_port)
+            search_and_download(peer, server_ip,server_port)
          elif choice == "3":
             add_new_shared_files(server_ip, server_port)
          elif choice == "4":

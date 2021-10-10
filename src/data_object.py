@@ -50,3 +50,6 @@ class DataObject:
 
     def get_file_list(self):
         print(self.send_receive([ENUMERATE]))
+
+    def register_chunk(self, peer_data_object):
+       return self.send_receive([REGISTER_CHUNK, peer_data_object])

@@ -18,6 +18,7 @@ def show_result(result, filename, _=None):
         download_it = input("Do you want to download it (Y/N):\n")
         download_it = (download_it.strip()).lower()
         if download_it == "y":
+            #print(chunkid_to_addresses) 
             return chunkid_to_addresses, True
         elif download_it == 'n':
             return _, False  # When user refuses to download it return any,any,false
