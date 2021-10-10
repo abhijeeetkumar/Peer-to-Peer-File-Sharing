@@ -102,7 +102,15 @@ class Peer:
            dir_path = os.path.join(self.tmp_dir, filename)
            if not os.path.exists(dir_path):
               os.makedirs(dir_path)
-           args = (host,port,message, dir_path, chunkid)
+           ignore_flag = False
+           for chunkid_exsisting in os.listdir(dir_path):  #fault tolerance: file already downloaded
+              if chunkid == chunkid_exsisting:
+                 print(chunkid, "already downloaded.") 
+                 ignore_flag = True
+                 break
+           if ignore_flag == True:
+              continue  
+           args = (host, port, message, dir_path, chunkid)
            t = threading.Thread(target=self.download_chunk_thread, args = args)
            t.start()
            threads.append(t)
