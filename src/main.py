@@ -24,9 +24,9 @@ def search_and_download(ip,port):
       if len(filename) != 0:
          peer = Peer(socket, 0, "", port, ip)  # We don't have to set port or host for peer as it is not going to listen
          file_data = peer.search(filename, ip, port)
-         peer_host, peer_port, download_size, download_it = show_result(file_data, filename)
+         chunkid_to_addresses, download_it = show_result(file_data, filename)
          if download_it:
-            peer.download_file([DOWNLOAD, filename], download_size, peer_host, peer_port)
+            peer.download_file([DOWNLOAD, filename], chunkid_to_addresses)
          else:
             print ("Okay thank you for using our system.")
       else:

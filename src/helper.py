@@ -1,8 +1,10 @@
 import os
 from constants import *
+from collections import defaultdict
 
 def show_result(result, filename, _=None):
     # type: (list, str) -> [any,any,bool]
+    chunkid_to_addresses  = defaultdict(list)
     if result[0]:
         print ("File", filename, "was found in the following one or more peers. Peer/s details are:\n")
         for key in result[1]:
@@ -10,39 +12,18 @@ def show_result(result, filename, _=None):
             print ("Peer ID:", key, "\n")
             print ("Peer port:", value['peer_port'], "\n")
             print ("Peer host:", value['peer_host'], "\n")
-            print_chunks(value['shared_chunks'], filename)
+            print_chunks(value['shared_chunks'], filename, chunkid_to_addresses, value)
             print ("File shared at:", value['shared_at'], "\n")
             print ("-------------------------------------")
         download_it = input("Do you want to download it (Y/N):\n")
         download_it = (download_it.strip()).lower()
         if download_it == "y":
-            if len(result[1]) > 1:  # Making sure there are more than one registered peer has the file.
-                peer_id = input("Please specify Peer ID\n")
-                try:
-                    peer_id = int(peer_id)
-                    if peer_id in result[1]:
-                        peer_host = result[1].get(peer_id)['peer_host']
-                        peer_port = result[1].get(peer_id)['peer_port']
-                        file_id = get_file_id(result[1].get(peer_id)['shared_files'], filename)
-                        download_size = result[1].get(peer_id)['shared_files_size'][file_id]
-                        return peer_host, peer_port, download_size, True
-                    else:
-                        return _, _, _, False
-                except ValueError:
-                    return _, _, _, False
-
-            else:
-                # Dictionary contains only one element. So we retrieve its host and port
-                peer_host = list(result[1].values())[0]['peer_host']
-                peer_port = list(result[1].values())[0]['peer_port']
-                file_id = get_file_id(list(result[1].values())[0]['shared_files'], filename)
-                download_size = list(result[1].values())[0]['shared_files_size'][file_id]
-                return peer_host, peer_port, download_size, True
+            return chunkid_to_addresses, True
         elif download_it == 'n':
-            return _, _, _, False  # When user refuses to download it return any,any,false
+            return _, False  # When user refuses to download it return any,any,false
         else:
             print ("Invalid Choice")
-            return _, _, _, False
+            return _, False
     else:
         print ("File", filename, "was not found!")
 
@@ -53,15 +34,20 @@ def get_file_id(file_list, filename):
 
     return file_id
 
-def print_chunks(shared_chunks, filename):
+def print_chunks(shared_chunks, filename, chunkid_to_addresses, data):
     chunk_filename = [value.split('/')[-1] for value in shared_chunks.get(filename)]
     print("Chunks available: ",chunk_filename, "\n")
+    for chunkid in chunk_filename:
+       chunkid_to_addresses[chunkid].append(':'.join([data['peer_host'], str(data['peer_port'])]))
 
 def get_chunk_path(tmp_dir, filename, chunkid):
     parent = os.path.join(tmp_dir, filename)
+    postfix = chunkid
     if not os.path.exists(parent):
        os.system('mkdir -p {}'.format(parent))
-    return os.path.join(parent, str(chunkid) + '.chunk')
+    if isinstance(chunkid, int):
+       postfix = str(chunkid) + '.chunk'
+    return os.path.join(parent, postfix)
 
 def split_file_into_chunks(tmp_dir, filepath):
     filename = filepath.split('/')[-1]
@@ -83,8 +69,8 @@ def combine_chunks_to_file(tmp_dir, destination, filename, chunkids):
 def send_file(conn, data, tmp_dir):
     filename = data[1]
     filepath = os.path.join(tmp_dir, filename)
-
-    for f in sorted(os.listdir(filepath)):
+    print(data)
+    for f in list(data[2:]):
        path_to_file = os.path.join(filepath, f)
        with open(path_to_file, 'rb') as file_to_send:
           for data in file_to_send:
