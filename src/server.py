@@ -4,7 +4,7 @@ from constants import *
 from controller import *
 
 class Server:
-    def __init__(self, s, port=0, host=0, max_num_connections=5):
+    def __init__(self, s, port=0, host=0, max_num_connections=1):
         self.host = host  # this machine
         self.semaphore = Semaphore(max_num_connections)  # Handling threads synchronization for critical sections.
         self.port = int(port)  # the port it will listen to
@@ -61,3 +61,7 @@ class Server:
             elif request[0] == ENUMERATE:
                result_file_list = file_list(self.setOfLists)
                conn.send(pickle.dumps(result_file_list))
+            elif request[0] == REGISTER_CHUNK:
+               self.semaphore.acquire()
+               register_chunk(conn, request, self.setOfLists)
+               self.semaphore.release() 

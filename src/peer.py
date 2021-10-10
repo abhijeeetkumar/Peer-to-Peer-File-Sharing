@@ -3,6 +3,8 @@ from helper import *
 
 import math
 import threading
+import datetime
+import time
 from queue import PriorityQueue 
 
 class Peer:
@@ -39,8 +41,7 @@ class Peer:
         result = self.send_receive([SEARCH, filename], host, port)
         return result
 
-    @staticmethod 
-    def download_chunk_thread(host, port, message, dir_path, chunk_ids):
+    def download_chunk_thread(self, host, port, message, dir_path, chunk_ids):
         s = socket.socket()
         s.connect((host,int(port)))
 
@@ -57,6 +58,15 @@ class Peer:
         file_to_write.close()
 
         print("downloaded", chunk_ids, "from", host,":", port)
+        filename = dir_path.split("/")[-1]
+        chunk_path = []
+        chunk_path.append(str(os.path.join(dir_path,chunk_ids)))
+        shared_chunks = {filename:chunk_path}
+        sharing_datetime = datetime.datetime.fromtimestamp(int(time.time())).strftime('%Y-%m-%d %H:%M:%S')
+        peer_data_object = dict(peer_port=self.port, peer_host=self.host, shared_at=sharing_datetime, shared_files=filename, shared_chunks=shared_chunks)
+        IS_SUCCESS =self.data_object.register_chunk(peer_data_object)
+        if IS_SUCCESS:
+           print("Registered as source for chunk id:", chunk_ids)
         s.close()
 
     def download_file(self, message, chunkid_to_addresses):
