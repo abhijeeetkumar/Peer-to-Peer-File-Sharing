@@ -54,7 +54,14 @@ class Peer:
         s.send(pickle.dumps(new_message))  # send some data 
 
         with open(os.path.join(dir_path, chunk_ids), 'wb') as file_to_write:
-             data = s.recv(BYTES_PER_CHUNK)
+             data = b''
+             while True:
+                   part = s.recv(BUFF_SIZE)
+                   data += part
+                   if len(data) > BYTES_PER_CHUNK:
+                      break
+                   if not part:
+                      break 
              file_to_write.write(data)
         file_to_write.close()
 
