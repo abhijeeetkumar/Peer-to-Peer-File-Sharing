@@ -10,6 +10,15 @@ from server import *
 from peer import *
 #from validation import *
 
+def toggle_node_state(peer, interval):
+    threading.Timer(interval, toggle_node_state, [peer, interval]).start()
+    now = datetime.datetime.fromtimestamp(int(time.time()))
+    peer.am_choking = not peer.am_choking
+    peer.am_interested = not peer.am_interested
+    peer.peer_choking = not peer.peer_choking
+    peer.peer_interested = not peer.peer_interested
+    print("Node state toggled. At: ",now.strftime('%Y-%m-%d %H:%M:%S'))
+
 def build_server(port):
     print ("Welcome Server!!!")
     hostname = socket.gethostname()
@@ -82,6 +91,7 @@ def build_client(server_ip, server_port):
     print ("Welcome Client!!!")
     client_ip = socket.gethostbyname(socket.gethostname())
     peer = Peer(socket, server_port, client_ip, server_port, server_ip)
+    #toggle_node_state(peer, 30)
     while True: 
          choice = input("Enter 1 for registering the client with the"
                   "central server\n"
