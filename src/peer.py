@@ -1,6 +1,6 @@
 from data_object import *
 from helper import *
-
+import random
 import math
 import threading
 import datetime
@@ -115,7 +115,8 @@ class Peer:
            entry = download_queue.get()
 
            #print(list(entry[2]['addresses']))
-           for alive_peer in list(entry[2]['addresses']): #fault tolerance: if node exits, download from other peer
+           lst = list(entry[2]['addresses'])
+           for alive_peer in random.sample(lst,len(lst)): #fault tolerance: if node exits, download from other peer
                try:
                  sock = socket.socket()
                  host, port = alive_peer.split(":")
@@ -129,7 +130,8 @@ class Peer:
 
            self.am_interested[host] = True
            self.am_choking[host] = False
-           #Peer.send_to(host, int(port)-2, [UNCHOKE])
+           self.peer_choking[host] = False    #Since we are not maintaning shared memory for all thread
+           Peer.send_to(host, int(port), [UNCHOKE])
            #print("unchoking ", host)
 
            filename = entry[2]['filename']
@@ -150,8 +152,9 @@ class Peer:
            args = (host, port, message, dir_path, chunkid)
            t = threading.Thread(target=self.download_chunk_thread, args = args)
 
-           #while not (self.am_interested[host] == True and self.peer_choking[host] == False):
-           #   time.sleep(5) 
+           while not (self.am_interested[host] == True and self.peer_choking[host] == False):
+              print("Entering sleep mode in download. Host",host,"  ",self.am_interested[host],"  ", self.peer_choking[host])
+              time.sleep(5) 
            t.start()
            threads.append(t)
            self.am_interested[host] = False 
@@ -168,6 +171,7 @@ class Peer:
     def send_receive(message, host, port):
         # type: (list) -> str or int
         sock = socket.socket()  # create a socket
+        #print("Host: ",host," Peer: ",port)
         sock.connect((host, port))  # connect to server
         sock.send(pickle.dumps(message))  # send some data
         result = pickle.loads(Peer.__recvall(sock))  # receive the response - TODO: pickle.loads() can only work for 4096B object
@@ -181,6 +185,7 @@ class Peer:
         :rtype: None
         """
         sock = socket.socket()
+        #print("Host: ",host," Port: ",port)
         sock.connect((host, port))  # connect to server (blocking call)
         sock.send(pickle.dumps(data))  # send some data
         sock.close()
@@ -192,12 +197,14 @@ class Peer:
         self.is_listening = True 
         while True:
             (conn, addr) = self.sock.accept()
-            print ("[*] Got a connection from ", addr[0], ":", addr[1])
+            now = datetime.datetime.fromtimestamp(int(time.time()))
+            print ("[*] Got a connection from ", addr[0], ":", addr[1]," at:",now.strftime('%Y-%m-%d %H:%M:%S'))
             data = self.__recvall(conn)
             request = pickle.loads(data)  # unwrap the request
             if request[0] == DOWNLOAD:
-                #while not (self.peer_interested[addr[0]] == True and self.am_choking[addr[0]] == False):
-                #     time.sleep(5)
+                while not (self.peer_interested[addr[0]] == True and self.am_choking[addr[0]] == False):
+                     #print(" entering sleep mode in download. ",addr[0])
+                     time.sleep(5)
                 send_file(conn, request, self.tmp_dir)
                 self.peer_interested[addr[0]] = False 
             if request[0] == PING:
@@ -211,4 +218,6 @@ class Peer:
                print("choked by", addr[0])
             if request[0] == UNCHOKE:
                self.peer_choking[addr[0]] = False
-               print("unchoked by", addr[0]) 
+               print("unchoked by", addr[0],  self.peer_choking[addr[0]]) 
+
+

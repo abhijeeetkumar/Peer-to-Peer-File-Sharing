@@ -64,7 +64,7 @@ def register_node(peer, ip,port):
         else:
            print ("You cannot share empty directory.")
     except Exception as exc:
-        print("Caught exception: %s" %str(exc))
+        print("Caught exception: ",str(exc))
 
 def add_new_shared_files(server_ip, server_port):
     print("not yet implemented")
@@ -89,7 +89,8 @@ def build_client(server_ip, server_port):
                   "from the network.\n"
                   "Enter 3 for adding new folders in shared list.\n"
                   "Enter 4 for unsharing folders\n"
-                  "Enter 5 to list all shared files in network\n")
+                  "Enter 5 to list all shared files in network\n"
+                  "Enter 6 to exit\n\n")
          if choice == "1":
             register_node(peer, server_ip,server_port)
          elif choice == "2":
@@ -100,6 +101,9 @@ def build_client(server_ip, server_port):
             unshare_files(server_ip, server_port)
          elif choice == "5":
             list_all_files(server_ip, server_port)
+         elif choice == "6":
+            print("Good Bye!!")
+            exit(1)
          else:
             pass 
 

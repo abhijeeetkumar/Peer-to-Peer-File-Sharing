@@ -2,6 +2,8 @@ from threading import *
 import pickle
 from constants import *
 from controller import *
+import datetime
+import time
 
 class Server:
     def __init__(self, s, port=0, host=0, max_num_connections=1):
@@ -27,7 +29,8 @@ class Server:
     def run(self):
         while True:
             (conn, addr) = self.sock.accept()  # accept incoming call
-            print ("[*] Got a connection from ", addr[0], ":", addr[1])
+            now = datetime.datetime.fromtimestamp(int(time.time()))
+            print ("[*] Got a connection from ", addr[0], ":", addr[1]," at: ",now.strftime('%Y-%m-%d %H:%M:%S'))
             data = self.__recvall(conn)  # fetch data from peer
             request = pickle.loads(data)  # unwrap the request
             print ("[*] Request after unwrap", request)
