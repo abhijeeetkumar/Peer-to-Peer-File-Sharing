@@ -42,8 +42,12 @@ def append(conn, request, set_of_lists):
 
 def file_list(list_of_files):
     print("Sending list of files to peer") 
+    count = 0
+    for key in list_of_files:
+        count += len(list_of_files.get(key)['shared_files'])
+
     return_data = {
-                  'count':len(list_of_files),
+                  'count':count,
                   'result': [{'filename': list_of_files.get(key)['shared_files'],
                               'size' : list_of_files.get(key)['shared_files_size']} for key in list_of_files]}
     return return_data
